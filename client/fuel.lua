@@ -1,6 +1,7 @@
 local config = require 'config'
 local state = require 'client.state'
 local utils = require 'client.utils'
+local EmergencySystem = require 'shared.emergency_system'
 local fuel = {}
 
 ---@param vehState StateBag
@@ -35,17 +36,22 @@ function fuel.getPetrolCan(coords, refuel)
 				flags = 49,
 			}
 		}) then
+		local price = refuel and config.petrolCan.refillPrice or config.petrolCan.price
+		local finalPrice, hasDiscount = EmergencySystem.calculateDiscountedPrice(price)
+
 		if refuel and exports.ox_inventory:GetItemCount('WEAPON_PETROLCAN') then
-			return TriggerServerEvent('ox_fuel:fuelCan', true, config.petrolCan.refillPrice)
+			return TriggerServerEvent('ox_fuel:fuelCan', true, finalPrice, hasDiscount)
 		end
 
-		TriggerServerEvent('ox_fuel:fuelCan', false, config.petrolCan.price)
+		TriggerServerEvent('ox_fuel:fuelCan', false, finalPrice, hasDiscount)
 	end
 
 	ClearPedTasks(cache.ped)
 end
 
-function fuel.startFueling(vehicle, isPump)
+function fuel.startFueling(vehicle, isPump, serviceFee)
+	serviceFee = serviceFee or 0
+
 	local vehState = Entity(vehicle).state
 	local fuelAmount = vehState.fuel or GetVehicleFuelLevel(vehicle)
 	local duration = math.ceil((100 - fuelAmount) / config.refillValue) * config.refillTick
@@ -57,13 +63,22 @@ function fuel.startFueling(vehicle, isPump)
 	end
 
 	if isPump then
-		price = 0
+		price = serviceFee
 		moneyAmount = utils.getMoney()
 
-		if config.priceTick > moneyAmount then
+		local finalPricePerTick, hasDiscount = EmergencySystem.calculateDiscountedPrice(config.priceTick)
+
+		if finalPricePerTick + serviceFee > moneyAmount then
 			return lib.notify({
 				type = 'error',
-				description = locale('not_enough_money', config.priceTick)
+				description = locale('not_enough_money', math.ceil(finalPricePerTick + serviceFee))
+			})
+		end
+
+		if hasDiscount and serviceFee == 0 then
+			lib.notify({
+				type = 'info',
+				description = 'Descuento de emergencia aplicado'
 			})
 		end
 	elseif not state.petrolCan then
@@ -108,9 +123,11 @@ function fuel.startFueling(vehicle, isPump)
 
 	while state.isFueling do
 		if isPump then
-			price += config.priceTick
+			local finalPricePerTick, hasDiscount = EmergencySystem.calculateDiscountedPrice(config.priceTick)
 
-			if price + config.priceTick >= moneyAmount and lib.progressActive() then
+			price += finalPricePerTick
+
+			if price + finalPricePerTick >= moneyAmount and lib.progressActive() then
 				lib.cancelProgress()
 			end
 		elseif state.petrolCan then

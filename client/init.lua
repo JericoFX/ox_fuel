@@ -101,10 +101,15 @@ RegisterCommand('startfueling', function()
 			end
 
 			return lib.notify({ type = 'error', description = locale('petrolcan_cannot_afford') })
-		elseif moneyAmount >= config.priceTick then
-			return fuel.startFueling(state.lastVehicle, true)
 		else
-			return lib.notify({ type = 'error', description = locale('refuel_cannot_afford') })
+			local NPCService = require 'client.npc_service'
+			if config.npcService.enabled then
+				if NPCService.showServiceMenu(state.lastVehicle) then
+					return
+				end
+			end
+
+			return fuel.startFueling(state.lastVehicle, true)
 		end
 
 		return lib.notify({ type = 'error', description = locale('vehicle_far') })
@@ -112,7 +117,6 @@ RegisterCommand('startfueling', function()
 		local vehicle = utils.getVehicleInFront()
 
 		if vehicle and DoesVehicleUseFuel(vehicle) then
-
 			local boneIndex = utils.getVehiclePetrolCapBoneIndex(vehicle)
 			local fuelcapPosition = boneIndex and GetWorldPositionOfEntityBone(vehicle, boneIndex)
 

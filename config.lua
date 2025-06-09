@@ -56,5 +56,38 @@ return {
 		`prop_gas_pump_1c`,
 		`prop_gas_pump_1b`,
 		`prop_gas_pump_1d`,
-	}
+	},
+
+	-- Mecánicas avanzadas (opcional)
+	advancedMechanics = {
+		enabled = true,
+		fuelDegradation = true,
+		consumptionByDriving = true,
+		leakageOnDamage = true
+	},
+
+	-- Sistema de NPCs de servicio
+	npcService = {
+		enabled = true,
+		spawnDistance = 50.0,
+		services = {
+			fullService = {
+				enabled = true,
+				price = 10,
+				includesCleaning = true,
+			},
+			windshieldCleaning = {
+				enabled = true,
+				price = 25,
+				duration = 5000
+			}
+		}
+	},
+
+	-- Precios preferenciales para emergencias
+	emergencyDiscount = {
+		enabled = true,
+		jobs = { 'police', 'sheriff', 'ambulance', 'fire' },
+		discount = 0.5 -- 50% descuento
+	},
 }

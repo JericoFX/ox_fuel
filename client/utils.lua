@@ -1,3 +1,4 @@
+local config = require 'config'
 local utils = {}
 
 ---@param coords vector3
@@ -74,7 +75,6 @@ local function getMoneyCheckMethod()
 	end
 end
 
-local config = require 'config'
 utils.getMoney = getMoneyCheckMethod()
 
 exports('setMoneyCheck', function(fn)

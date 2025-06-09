@@ -5,20 +5,19 @@ game 'gta5'
 
 name 'ox_fuel'
 author 'Overextended'
-version '1.5.2'
+version '1.6.0'
 repository 'https://github.com/JericoFX/ox_fuel'
-description 'Fuel management system with ox_inventory support'
+description 'Advanced fuel management system with NPC service and emergency discounts'
 
 dependencies {
 	'ox_lib',
 	'ox_inventory'
 }
 
-
-
 shared_scripts {
 	'@ox_lib/init.lua',
-	'config.lua'
+	'config.lua',
+	'shared/*.lua'
 }
 
 server_scripts {
@@ -31,6 +30,7 @@ files {
 	'locales/*.json',
 	'data/stations.lua',
 	'client/*.lua',
+	'shared/*.lua'
 }
 
 ox_libs {

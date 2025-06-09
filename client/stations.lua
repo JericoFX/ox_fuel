@@ -2,6 +2,7 @@ local config = require 'config'
 local state = require 'client.state'
 local utils = require 'client.utils'
 local stations = lib.load 'data.stations'
+local NPCService = require 'client.npc_service'
 
 if config.showBlips == 2 then
 	for station in pairs(stations) do utils.createBlip(station) end
@@ -14,6 +15,8 @@ local function onEnterStation(point)
 	if config.showBlips == 1 and not point.blip then
 		point.blip = utils.createBlip(point.coords)
 	end
+
+	NPCService.onEnterStation(point.coords)
 end
 
 ---@param point CPoint
@@ -63,6 +66,8 @@ local function onExitStation(point)
 	if point.blip then
 		point.blip = RemoveBlip(point.blip)
 	end
+
+	NPCService.onExitStation(point.coords)
 end
 
 for station, pumps in pairs(stations) do

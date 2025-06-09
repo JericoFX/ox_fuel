@@ -92,32 +92,37 @@ end)
 RegisterNetEvent('ox_fuel:pay', function(price, fuel, netid)
 	assert(type(price) == 'number', ('Price expected a number, received %s'):format(type(price)))
 	local source = source
-	if not payMoney(source, price) then return end
+	if not payMoney(source, math.ceil(price)) then return end
 
 	fuel = math.floor(fuel)
 	setFuelState(netid, fuel)
 
 	TriggerClientEvent('ox_lib:notify', source, {
 		type = 'success',
-		description = locale('fuel_success', fuel, price)
+		description = locale('fuel_success', fuel, math.ceil(price))
 	})
 end)
 
-RegisterNetEvent('ox_fuel:fuelCan', function(hasCan, price)
+RegisterNetEvent('ox_fuel:fuelCan', function(hasCan, price, hasDiscount)
 	local source = source
+	hasDiscount = hasDiscount or false
+
 	if hasCan then
 		local item = ox_inventory:GetCurrentWeapon(source)
 
-		if not item or item.name ~= 'WEAPON_PETROLCAN' or not payMoney(source, price) then return end
+		if not item or item.name ~= 'WEAPON_PETROLCAN' or not payMoney(source, math.ceil(price)) then return end
 
 		item.metadata.durability = 100
 		item.metadata.ammo = 100
 
 		ox_inventory:SetMetadata(source, item.slot, item.metadata)
 
+		local message = hasDiscount and locale('petrolcan_refill', math.ceil(price)) .. ' (Descuento aplicado)' or
+			locale('petrolcan_refill', math.ceil(price))
+
 		TriggerClientEvent('ox_lib:notify', source, {
 			type = 'success',
-			description = locale('petrolcan_refill', price)
+			description = message
 		})
 	else
 		if not ox_inventory:CanCarryItem(source, 'WEAPON_PETROLCAN', 1) then
@@ -127,13 +132,16 @@ RegisterNetEvent('ox_fuel:fuelCan', function(hasCan, price)
 			})
 		end
 
-		if not payMoney(source, price) then return end
+		if not payMoney(source, math.ceil(price)) then return end
 
 		ox_inventory:AddItem(source, 'WEAPON_PETROLCAN', 1)
 
+		local message = hasDiscount and locale('petrolcan_buy', math.ceil(price)) .. ' (Descuento aplicado)' or
+			locale('petrolcan_buy', math.ceil(price))
+
 		TriggerClientEvent('ox_lib:notify', source, {
 			type = 'success',
-			description = locale('petrolcan_buy', price)
+			description = message
 		})
 	end
 end)
@@ -150,6 +158,22 @@ RegisterNetEvent('ox_fuel:updateFuelCan', function(durability, netid, fuel)
 		ox_inventory:SetMetadata(source, item.slot, item.metadata)
 		setFuelState(netid, fuel)
 	end
+end)
 
-	-- player is sus?
+RegisterNetEvent('ox_fuel:payService', function(price, serviceType, hasDiscount)
+	local source = source
+	hasDiscount = hasDiscount or false
+
+	if not payMoney(source, math.ceil(price)) then return end
+
+	local message = ''
+	if serviceType == 'windshield_cleaning' then
+		message = hasDiscount and ('Parabrisas limpio! $%s (Descuento aplicado)'):format(math.ceil(price)) or
+			('Parabrisas limpio! $%s'):format(math.ceil(price))
+	end
+
+	TriggerClientEvent('ox_lib:notify', source, {
+		type = 'success',
+		description = message
+	})
 end)
