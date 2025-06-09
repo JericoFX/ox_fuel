@@ -2,9 +2,11 @@ local config = require 'config'
 
 if not config then return end
 
-if config.versionCheck then lib.versionCheck('communityox/ox_fuel') end
+if config.versionCheck then lib.versionCheck('JericoFX/ox_fuel') end
 
 local ox_inventory = exports.ox_inventory
+local QBCore = config.framework == 'qb' and exports['qb-core']:GetCoreObject() or nil
+local ESX = config.framework == 'esx' and exports['es_extended']:getSharedObject() or nil
 
 local function setFuelState(netId, fuel)
 	local vehicle = NetworkGetEntityFromNetworkId(netId)
@@ -13,7 +15,7 @@ local function setFuelState(netId, fuel)
 		return
 	end
 
-	local state = Entity(vehicle)?.state
+	local state = Entity(vehicle).state
 	fuel = math.clamp(fuel, 0, 100)
 
 	state:set('fuel', fuel, true)
@@ -35,7 +37,53 @@ local function defaultPaymentMethod(playerId, price)
 	})
 end
 
-local payMoney = defaultPaymentMethod
+local function qbPaymentMethod(playerId, price)
+	local Player = QBCore.Functions.GetPlayer(playerId)
+	if not Player then return false end
+
+	local playerMoney = Player.PlayerData.money.cash
+
+	if playerMoney >= price then
+		Player.Functions.RemoveMoney('cash', price)
+		return true
+	else
+		TriggerClientEvent('ox_lib:notify', playerId, {
+			type = 'error',
+			description = locale('not_enough_money', price - playerMoney)
+		})
+		return false
+	end
+end
+
+local function esxPaymentMethod(playerId, price)
+	local xPlayer = ESX.GetPlayerFromId(playerId)
+	if not xPlayer then return false end
+
+	local playerMoney = xPlayer.getMoney()
+
+	if playerMoney >= price then
+		xPlayer.removeMoney(price)
+		return true
+	else
+		TriggerClientEvent('ox_lib:notify', playerId, {
+			type = 'error',
+			description = locale('not_enough_money', price - playerMoney)
+		})
+		return false
+	end
+end
+
+local function getPaymentMethod()
+	if config.framework == 'qb' then
+		return qbPaymentMethod
+	elseif config.framework == 'esx' then
+		return esxPaymentMethod
+	else
+		return defaultPaymentMethod
+	end
+end
+
+local payMoney = getPaymentMethod()
 
 exports('setPaymentMethod', function(fn)
 	payMoney = fn or defaultPaymentMethod

@@ -50,12 +50,32 @@ function utils.getVehiclePetrolCapBoneIndex(vehicle)
 	end
 end
 
----@return number
 local function defaultMoneyCheck()
 	return exports.ox_inventory:GetItemCount('money')
 end
 
-utils.getMoney = defaultMoneyCheck
+local function qbMoneyCheck()
+	local PlayerData = exports['qb-core']:GetCoreObject().Functions.GetPlayerData()
+	return PlayerData.money.cash or 0
+end
+
+local function esxMoneyCheck()
+	local PlayerData = exports['es_extended']:getSharedObject().GetPlayerData()
+	return PlayerData.money or 0
+end
+
+local function getMoneyCheckMethod()
+	if config.framework == 'qb' then
+		return qbMoneyCheck
+	elseif config.framework == 'esx' then
+		return esxMoneyCheck
+	else
+		return defaultMoneyCheck
+	end
+end
+
+local config = require 'config'
+utils.getMoney = getMoneyCheckMethod()
 
 exports('setMoneyCheck', function(fn)
 	utils.getMoney = fn or defaultMoneyCheck

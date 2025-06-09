@@ -21,18 +21,19 @@ local function nearbyStation(point)
 	if point.currentDistance > 15 then return end
 
 	local pumps = point.pumps
+	local playerCoords = cache.coords
 	local pumpDistance
 
 	for i = 1, #pumps do
 		local pump = pumps[i]
-		pumpDistance = #(cache.coords - pump)
+		pumpDistance = #(playerCoords - pump)
 
 		if pumpDistance <= 3 then
 			state.nearestPump = pump
 
 			repeat
-				local playerCoords = GetEntityCoords(cache.ped)
-				pumpDistance = #(GetEntityCoords(cache.ped) - pump)
+				playerCoords = GetEntityCoords(cache.ped)
+				pumpDistance = #(playerCoords - pump)
 
 				if cache.vehicle then
 					DisplayHelpTextThisFrame('fuelLeaveVehicleText', false)
@@ -47,7 +48,7 @@ local function nearbyStation(point)
 					end
 				end
 
-				Wait(0)
+				Wait(100)
 			until pumpDistance > 3
 
 			state.nearestPump = nil

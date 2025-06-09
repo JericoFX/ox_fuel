@@ -2,11 +2,17 @@ if not lib.checkDependency('ox_lib', '3.22.0', true) then return end
 if not lib.checkDependency('ox_inventory', '2.30.0', true) then return end
 
 return {
+	-- Framework configuration
+	-- 'ox' = Uses ox_inventory for money handling
+	-- 'qb' = Uses QBCore for money handling
+	-- 'esx' = Uses ESX for money handling
+	framework = 'qb', -- 'ox' or 'qb' or 'esx'
+
 	-- Get notified when a new version releases
-	versionCheck = true,
+	versionCheck = false,
 
 	-- Enable support for ox_target
-	ox_target = false,
+	ox_target = true,
 
 	/*
 	* Show or hide gas stations blips
